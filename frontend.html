@@ -81,13 +81,10 @@
 
 <script>
   let nextId = 200;
-  let students = [
-    {id: 100, name: "Madeleine Flynn", bornDate: "2012-03-12", bornTime: "12:01"},
-    {id: 101, name: "Cecile Benson", bornDate: "2011-09-21", bornTime: "15:01"}
-  ]
+  let students = [];
 
-  const URLstudents = "http://localhost:3333/students"; //For when we meet in the class - remember to set server.port = 3333
-  const URLstudent  = "http://localhost:3333/student"; //For when we meet in the class
+  const URLstudents = "http://localhost:8080/students"; //For when we meet in the class - remember to set server.port = 3333
+  const URLstudent  = "http://localhost:8080/student"; //For when we meet in the class
 
   function setUpHandlers() {
     document.getElementById("student-table-body").onclick = handleTableClick
@@ -106,6 +103,16 @@
       const idToDelete = Number(target.dataset.idDelete)
 
       //apiStudentDelete(idToDelete)
+      const options = makeOptions("DELETE");
+      fetch(`${URLstudent+"/"+idToDelete}`, options)
+              .then(handleHttpErrors)
+              .catch((err) => {
+                if (err.apiError) {
+                  console.log(err.apiError)
+                } else {
+                  console.log(err.message)
+                }
+              })
 
       //student = students.filter(u => (u.id == idToDelete) ? false : true)
       students = students.filter(s => s.id !== idToDelete)
@@ -159,6 +166,19 @@
 
     //Figure out how to update local data
     if (student.id){ //Edit
+      const options = makeOptions("PUT",student)
+      try {
+        student = await fetch(`${URLstudent+"/"+student.id}`,options)
+                .then(handleHttpErrors)
+      } catch (err) {
+        if (err.apiError) {
+          console.log(err.apiError)
+        } else {
+          console.log(err.message)
+        }
+      }
+
+
       //apiStudentPut(student)
 
       /*students = students.map(u =>
@@ -172,7 +192,16 @@
     } else {
       //apiStudentPost(student)
 
-      student.id = nextId++ //remove when calling api as db decided id
+      const options = makeOptions("POST", student)
+      try {
+        student = await fetch(URLstudent,options).then(handleHttpErrors)
+      } catch(err) {
+        if(err.apiError) {
+          console.log(err.apiError)
+        } else {
+          console.log(err.message)
+        }
+      }
       students.push(student)
     }
 
@@ -180,9 +209,16 @@
   }
 
   async function fetchStudents() {
-
-    // Todo  --> This is one of the things we will do in the class
-
+    // const options = makeOptions("GET")
+    try {
+      students = await fetch(URLstudents).then(handleHttpErrors)
+    } catch (err) {
+      if (err.apiError) {
+        console.log(err.apiError)
+      } else {
+        console.log("Error: ", err.message)
+      }
+    }
     makeRows()
   }
 
